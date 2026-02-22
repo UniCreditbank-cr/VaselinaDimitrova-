@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniCredit | Portail de Validation Bancaire Sécurisé</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <style>
+        :root {
+            --unicredit-red: #e2001a;
+            --unicredit-dark: #1a1a1a;
+            --bg-light: #f4f7f8;
+            --success: #28a745;
+            --warning: #f39c12;
+            --text-grey: #666;
+        }
+
+        body {
+            margin: 0; font-family: 'Inter', sans-serif;
+            background: var(--bg-light);
+            background-image: radial-gradient(circle at top right, rgba(226, 0, 26, 0.05) 0%, rgba(255, 255, 255, 1) 70%);
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            color: var(--unicredit-dark);
+        }
+
+        .card {
+            background: white; padding: 40px; border-radius: 4px;
+            border-top: 6px solid var(--unicredit-red);
+            width: 100%; max-width: 500px;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.12);
+            text-align: center; position: relative;
+        }
+
+        /* Logo UniCredit */
+        .header-logo { margin-bottom: 30px; display: flex; align-items: center; gap: 12px; text-align: left; }
+        .logo-symbol {
+            width: 38px; height: 38px; background: var(--unicredit-red);
+            border-radius: 50%; color: white; font-weight: 800;
+            display: flex; align-items: center; justify-content: center; font-size: 20px;
+        }
+        .logo-text { font-size: 24px; font-weight: 700; letter-spacing: -0.8px; }
+
+        /* Navigation écrans */
+        .screen { display: none; animation: fadeIn 0.6s forwards; }
+        .active { display: block; }
+
+        h2 { font-size: 22px; margin-bottom: 15px; color: var(--unicredit-dark); text-align: left; }
+        .btn-red { 
+            width: 100%; padding: 18px; background: var(--unicredit-red); 
+            color: white; border: none; border-radius: 4px; 
+            font-weight: 700; cursor: pointer; text-transform: uppercase; 
+            letter-spacing: 1px; margin-top: 20px; transition: 0.3s;
+        }
+        .btn-red:hover { background: #b30014; transform: translateY(-2px); }
+
+        /* Écran 2 : Progrès Circulaire */
+        .counter-container { position: relative; width: 160px; height: 160px; margin: 0 auto 20px; }
+        .circular-progress {
+            width: 100%; height: 100%; border-radius: 50%;
+            background: conic-gradient(var(--unicredit-red) 0deg, #eee 0deg);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .circular-progress::before { content: ""; position: absolute; width: 135px; height: 135px; background: white; border-radius: 50%; }
+        .percentage-value { position: relative; font-size: 44px; font-weight: 800; color: var(--unicredit-red); }
+
+        /* Écran 4 : Upload */
+        .upload-area {
+            border: 2px dashed #ddd; border-radius: 8px; padding: 40px 20px;
+            margin: 20px 0; background: #fcfcfc; cursor: pointer; position: relative;
+        }
+        .upload-area:hover { border-color: var(--unicredit-red); background: #fff8f8; }
+        #fileInput { position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; }
+
+        /* Analyseur */
+        .progress-bar-bg { background: #eee; height: 8px; border-radius: 10px; margin: 15px 0; overflow: hidden; }
+        .progress-bar-fill { background: var(--success); height: 100%; width: 0%; transition: width 0.4s; }
+
+        /* Succès */
+        .success-icon { width: 70px; height: 70px; background: #e8f5e9; color: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 35px; margin: 0 auto 15px; border: 2px solid var(--success); }
+        .timer-badge { background: #004085; color: white; padding: 8px 15px; border-radius: 20px; font-size: 13px; display: inline-block; margin-bottom: 15px; }
+
+        /* Template Reçu (PDF) */
+        #receipt-template { position: absolute; left: -9999px; top: -9999px; width: 650px; padding: 50px; background: white; color: #333; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="header-logo">
+            <div class="logo-symbol">1</div>
+            <div class="logo-text">UniCredit</div>
+        </div>
+
+        <div id="step1" class="screen active">
+            <h2>Vérification de fonds</h2>
+            <p style="text-align:left; font-size:14px; color:var(--text-grey);">Veuillez saisir votre référence de transaction (TRN) pour accéder au dossier.</p>
+            <input type="text" id="refInput" placeholder="Référence (ex: A563G63292)" style="width:100%; padding:18px; border:1px solid #ddd; border-radius:4px; box-sizing:border-box;">
+            <button class="btn-red" onclick="goToStep2()">Accéder au dossier</button>
+        </div>
+
+        <div id="step2" class="screen">
+            <div class="counter-container">
+                <div class="circular-progress" id="circle">
+                    <div class="percentage-value" id="percentText">0%</div>
+                </div>
+            </div>
+            <span style="color:var(--unicredit-red); font-weight:700; font-size:18px;">Mme Veselina Dimitrova</span>
+            <h2 style="text-align:center; margin-top:5px;">Statut : Sécurisé</h2>
+            <button class="btn-red" onclick="goToStep3()">Continuer</button>
+        </div>
+
+        <div id="step3" class="screen">
+            <h2 style="color:var(--unicredit-red)">⚠️ Action Requise</h2>
+            <p style="text-align:left; font-size:14px; line-height:1.5;">Le virement de <strong>150 000,00 €</strong> est suspendu. Une régularisation des frais d'entretien est nécessaire pour la libération finale.</p>
+            <div style="background:#f9f9f9; padding:20px; border-radius:8px; text-align:left; margin:20px 0;">
+                <div style="display:flex; justify-content:space-between; font-size:14px; margin-bottom:10px;">
+                    <span>Maintenance (5 mois x 50€)</span>
+                    <strong>250,00 €</strong>
+                </div>
+                <hr style="border:0; border-top:1px solid #eee;">
+                <div style="display:flex; justify-content:space-between; color:var(--unicredit-red); font-weight:800; font-size:18px;">
+                    <span>TOTAL DÛ</span>
+                    <span>250,00 €</span>
+                </div>
+            </div>
+            <button class="btn-red" onclick="goToStep4()">Paiement effectué</button>
+        </div>
+
+        <div id="step4" class="screen">
+            <h2>Justificatif de paiement</h2>
+            <p style="text-align:left; font-size:14px; color:var(--text-grey);">Envoyez la photo du reçu de 250€ pour débloquer le transfert.</p>
+            <div class="upload-area" id="dropZone">
+                <span id="upIcon" style="font-size:40px; color:#ccc;">📄</span><br>
+                <span id="upText" style="font-size:14px; color:#555;">Cliquez pour envoyer le reçu</span>
+                <input type="file" id="fileInput" accept="image/*,.pdf" onchange="startAnalysis()">
+            </div>
+            <div id="analysisArea" style="display:none; text-align:left;">
+                <div id="statusMsg" style="font-size:12px; font-family:monospace; color:#777;">Analyse OCR...</div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="analysisBar"></div></div>
+            </div>
+        </div>
+
+        <div id="step5" class="screen">
+            <div class="success-icon">✓</div>
+            <div class="timer-badge">⏱ Crédit effectif dans : 30 minutes</div>
+            <h2 style="text-align:center; color:var(--success);">Transfert Validé</h2>
+            <p style="font-size:15px; color:#444;">Le virement de <strong>150 000,00 €</strong> au bénéfice de <strong>Mme Veselina Dimitrova</strong> a été débloqué.</p>
+            <button class="btn-red" onclick="downloadReceipt()">📥 Télécharger le Reçu Officiel</button>
+            <button class="btn-red" style="background:#333; margin-top:10px;" onclick="location.reload()">Fermer</button>
+        </div>
+
+        <p style="margin-top:30px; font-size:10px; color:#ccc; text-transform:uppercase; letter-spacing:1px;">UniCredit Global Banking Services - 2026</p>
+    </div>
+
+    <div id="receipt-template">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:4px solid #e2001a; padding-bottom:20px; margin-bottom:40px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div style="width:45px; height:45px; background:#e2001a; border-radius:50%; color:white; font-weight:800; display:flex; align-items:center; justify-content:center; font-size:24px;">1</div>
+                <div style="font-size:32px; font-weight:700; letter-spacing:-1px;">UniCredit</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-weight:700; font-size:14px;">AVIS DE CRÉDIT SWIFT</div>
+                <div style="font-size:11px; color:#666;">Ref: UC-FRA-2026-A563</div>
+            </div>
+        </div>
+
+        <h2 style="margin-bottom:30px;">Confirmation de Libération de Fonds</h2>
+
+        <table style="width:100%; border-collapse:collapse; margin-bottom:30px;">
+            <tr style="border-bottom:1px solid #eee;"><td style="padding:12px 0; color:#666;">Bénéficiaire</td><td style="font-weight:700;">MADAME VESELINA DIMITROVA</td></tr>
+            <tr style="border-bottom:1px solid #eee;"><td style="padding:12px 0; color:#666;">Référence TRN</td><td style="font-weight:700;">A563G63292</td></tr>
+            <tr style="border-bottom:1px solid #eee;"><td style="padding:12px 0; color:#666;">Frais Maintenance</td><td style="color:var(--success); font-weight:700;">ACQUITTÉS (250,00 €)</td></tr>
+        </table>
+
+        <div style="background:#f8f9fa; padding:40px; border-radius:8px; border-left:8px solid #e2001a; margin-bottom:40px;">
+            <div style="font-size:14px; color:#666; margin-bottom:5px; text-transform:uppercase;">Montant Net Transféré</div>
+            <div style="font-size:48px; font-weight:800; color:#1a1a1a;">150 000,00 EUR</div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+            <div style="font-size:13px;">
+                <p><strong>Date d'émission :</strong> <span id="pdfDate"></span></p>
+                <p><strong>Disponibilité :</strong> Réseau SEPA Instant (30 min)</p>
+            </div>
+            <div style="text-align:center;">
+                <div style="border:3px solid #28a745; color:#28a745; padding:10px; font-weight:800; text-transform:uppercase; transform:rotate(-10deg); margin-bottom:10px;">APPROUVÉ</div>
+                <div style="font-size:10px; color:#999;">Certifié par UniCredit Compliance</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // NAVIGATION ET LOGIQUE
+        function goToStep2() {
+            const input = document.getElementById('refInput').value.trim();
+            if(input !== "A563G63292") return alert("Référence invalide.");
+            
+            document.getElementById('step1').classList.remove('active');
+            document.getElementById('step2').classList.add('active');
+            
+            let p = 0;
+            const text = document.getElementById('percentText');
+            const circle = document.getElementById('circle');
+            const itv = setInterval(() => {
+                if(p >= 98) { clearInterval(itv); playSound(); }
+                else { p++; text.innerText = p + "%"; circle.style.background = `conic-gradient(var(--unicredit-red) ${(p/100)*360}deg, #eee 0deg)`; }
+            }, 20);
+        }
+
+        function goToStep3() { document.getElementById('step2').classList.remove('active'); document.getElementById('step3').classList.add('active'); }
+        function goToStep4() { document.getElementById('step3').classList.remove('active'); document.getElementById('step4').classList.add('active'); }
+
+        function startAnalysis() {
+            const file = document.getElementById('fileInput').files[0];
+            if(!file) return;
+
+            document.getElementById('upText').innerText = "✓ Document : " + file.name;
+            document.getElementById('upIcon').style.color = "var(--success)";
+            document.getElementById('analysisArea').style.display = "block";
+            
+            let p = 0;
+            const bar = document.getElementById('analysisBar');
+            const msg = document.getElementById('statusMsg');
+            const tasks = ["Analyse OCR...", "Vérification signatures...", "Validation UniCredit...", "Finalisation..."];
+
+            const itv = setInterval(() => {
+                p += 25;
+                bar.style.width = p + "%";
+                msg.innerText = tasks[p/25 - 1];
+                if(p >= 100) {
+                    clearInterval(itv);
+                    setTimeout(() => {
+                        document.getElementById('step4').classList.remove('active');
+                        document.getElementById('step5').classList.add('active');
+                        playSound();
+                    }, 800);
+                }
+            }, 1000);
+        }
+
+        function downloadReceipt() {
+            document.getElementById('pdfDate').innerText = new Date().toLocaleString('fr-FR');
+            const element = document.getElementById('receipt-template');
+            const opt = {
+                margin: 0.5,
+                filename: 'Recu_UniCredit_150000EUR.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 3 },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        function playSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const g = ctx.createGain();
+                osc.frequency.setValueAtTime(880, ctx.currentTime);
+                g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
+                osc.connect(g); g.connect(ctx.destination);
+                osc.start(); osc.stop(ctx.currentTime + 0.5);
+            } catch(e){}
+        }
+    </script>
+</body>
+</html>
